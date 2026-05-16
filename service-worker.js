@@ -1,6 +1,6 @@
 /* DS単語 — Service Worker for offline support */
 
-const CACHE_VERSION = 'ds-tango-v1';
+const CACHE_VERSION = 'ds-tango-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const AUDIO_CACHE = `${CACHE_VERSION}-audio`;
 
@@ -18,7 +18,15 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then((cache) => Promise.all(
+        // cache:'reload' forces bypassing the HTTP cache so an updated SW
+        // always sees the newest static assets.
+        STATIC_ASSETS.map((url) =>
+          fetch(url, { cache: 'reload' }).then((resp) => {
+            if (resp.ok) return cache.put(url, resp);
+          })
+        )
+      ))
       .then(() => self.skipWaiting())
   );
 });

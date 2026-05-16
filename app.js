@@ -107,13 +107,22 @@
   }
 
   // ============ Queue logic (PRD §3.2) ============
+  // Target size of the "learning" queue before we start recycling old words.
+  // Until the queue has this many words, "次へ" prefers fresh words; afterwards
+  // it cycles oldest-first through the learning queue.
+  const LEARNING_QUEUE_TARGET = 7;
+
   /**
-   * Pick the next word to show:
-   * 1. From learning queue, pick the one whose last_seen is oldest
-   * 2. If learning queue is empty, pick a new word (lowest id, frequency-ordered or random)
-   * 3. If all mastered, return null
+   * Pick the next word to show.
+   * Strategy:
+   *   1. Never return the current word if any alternative exists.
+   *   2. While the learning queue is small (< LEARNING_QUEUE_TARGET), grow it with fresh words.
+   *   3. Once large enough, cycle through learning words oldest-first.
+   *   4. If only the current word remains unmastered, return it (user must decide).
+   *   5. If everything is mastered, return null → done page.
    */
   function pickNextWord() {
+    const currentId = currentWord ? currentWord.id : null;
     const learning = [];
     const fresh = [];
     for (const w of vocab.words) {
@@ -122,24 +131,32 @@
       if (s === 'learning') learning.push(w);
       else fresh.push(w);
     }
-    if (learning.length > 0) {
-      // Sort by last_seen ascending (oldest first), exclude currentWord if possible
-      learning.sort((a, b) => {
-        const la = state.last_seen[a.id] || '';
-        const lb = state.last_seen[b.id] || '';
-        return la < lb ? -1 : la > lb ? 1 : 0;
-      });
-      // Avoid showing the same word twice in a row if there are alternatives
-      if (currentWord && learning[0].id === currentWord.id && learning.length > 1) {
-        return learning[1];
-      }
-      return learning[0];
+
+    if (learning.length === 0 && fresh.length === 0) return null;
+
+    const learningOthers = currentId ? learning.filter((w) => w.id !== currentId) : learning;
+    const freshOthers = currentId ? fresh.filter((w) => w.id !== currentId) : fresh;
+
+    // If only the current word remains unmastered, return it
+    if (learningOthers.length === 0 && freshOthers.length === 0) {
+      return currentWord;
     }
-    if (fresh.length > 0) {
-      // For MVP, take by index order (which is frequency-ordered within categories)
-      return fresh[0];
+
+    // Sort learning by last_seen ascending (oldest first)
+    learningOthers.sort((a, b) => {
+      const la = state.last_seen[a.id] || '';
+      const lb = state.last_seen[b.id] || '';
+      return la < lb ? -1 : la > lb ? 1 : 0;
+    });
+
+    // Grow the learning queue with fresh words until it reaches the target
+    if (learning.length < LEARNING_QUEUE_TARGET && freshOthers.length > 0) {
+      return freshOthers[0];
     }
-    return null;
+
+    // Queue is full enough — cycle oldest learning, fall back to fresh if none
+    if (learningOthers.length === 0) return freshOthers[0];
+    return learningOthers[0];
   }
 
   // ============ View routing ============
@@ -277,6 +294,12 @@
     renderCard(currentWord);
     // Scroll card-area to top so user sees the word and the start of definitions
     $('card-area').scrollTop = 0;
+    // Auto-play the word's pronunciation when meaning is revealed
+    // (user-gesture-initiated, so iOS Safari allows it)
+    if (currentWord && currentWord.audio && currentWord.audio.word) {
+      const wordBtn = document.querySelector('.word-toolbar [data-action="play-word"]');
+      playAudio(currentWord.audio.word, wordBtn);
+    }
   }
 
   function updateProgressDisplay() {
