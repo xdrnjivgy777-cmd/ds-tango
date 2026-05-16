@@ -1,0 +1,33 @@
+# Python virtual env / build artifacts
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+.claude/
+
+# Local-only intermediate artifacts (NOT shipped in repo, NOT needed at runtime)
+# Raw text dumps from PDFs/pptx (may contain PII even after redaction)
+scripts/extraction/raw_text/
+# Candidate CSV with course-source info (large, intermediate)
+scripts/extraction/candidates.csv
+scripts/extraction/by_category/
+# Batch input/output JSONs from the agent generation phase
+scripts/extraction/batches/
+
+# Secrets — never commit (Azure key, etc.)
+.env
+.env.local
+*.key
+
+# Mockup HTML — design preview, not part of the app
+mockup/

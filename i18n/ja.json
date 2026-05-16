@@ -1,0 +1,97 @@
+{
+  "_meta": {
+    "comment": "UI strings are all Japanese (PRD §3.4 — UI language fixed). 'labels' maps each translation-language code to its localized 意味/例文 label words."
+  },
+  "ui": {
+    "appName": "DS単語",
+    "appSubtitle": "データサイエンス・AI科 単語特訓",
+    "version": "v0.1",
+
+    "welcomeStart": "はじめる",
+
+    "langSelectTitle": "翻訳言語を選んでください",
+    "langSelectHint": "カードの下に表示される訳語です。",
+    "langConfirm": "確認",
+
+    "onbNext": "次へ",
+    "onbStart": "はじめる",
+
+    "cardMeaningBtn": "意味を見る",
+    "cardNextBtn": "次へ",
+    "cardMastered": "覚えた",
+    "cardLabelMeaning": "意味",
+    "cardLabelExample": "例文",
+
+    "headerCounterFormat": "{pos} / {total}",
+    "progressRemainingFormat": "残り {n} 語",
+    "progressMasteredFormat": "覚えた {m} / {t}",
+
+    "verifyBadge": "⚠ AI翻訳・校正待ち",
+
+    "menuMastered": "覚えた一覧",
+    "menuSettings": "設定",
+
+    "mastered": "覚えた単語",
+    "masteredCountFormat": "{m} / {t}",
+    "masteredEmpty": "まだ覚えた単語はありません。",
+    "masteredRestore": "学習に戻す",
+
+    "settings": "設定",
+    "settingGroupDisplay": "表示",
+    "settingGroupProgress": "進捗",
+    "settingGroupOther": "その他",
+    "settingTranslationLang": "翻訳言語",
+    "settingMastered": "覚えた単語",
+    "settingExport": "進捗をエクスポート",
+    "settingImport": "進捗をインポート",
+    "settingFeedback": "フィードバック",
+    "settingAbout": "このアプリについて",
+    "settingResetAll": "すべてリセット",
+    "settingsMetaFormat": "DS単語 {version}\nデータ更新日：{date}",
+
+    "doneTitle": "全部覚えました！",
+    "doneSubFormat": "{n}語すべてマスターしました。\n覚えた一覧から復習もできます。",
+    "doneBtnMastered": "覚えた一覧へ",
+
+    "modalExportTitle": "進捗をエクスポート",
+    "modalExportHint": "下のテキストをコピーして、安全な場所に保存してください。",
+    "modalExportCopy": "コピー",
+    "modalExportCopied": "コピーしました",
+
+    "modalImportTitle": "進捗をインポート",
+    "modalImportHint": "保存しておいた進捗テキストを貼り付けてください。",
+    "modalImportBtn": "インポート",
+    "modalImportInvalid": "形式が正しくありません。",
+    "modalImportSuccess": "進捗を復元しました。",
+
+    "modalAboutTitle": "このアプリについて",
+    "modalAboutBody": "DS単語（DS-tango）は、データサイエンス・AI科の留学生向けに、専門用語を効率的に覚えるための学習アプリです。\n\n本アプリでは日本語、英語、中国語は校正済みです。ミャンマー語、モンゴル語、インドネシア語、ネパール語の翻訳はAIによる生成のため、誤りが含まれる可能性があります。お気づきの点はフィードバックからご連絡ください。",
+
+    "modalFeedbackTitle": "フィードバック",
+    "modalFeedbackBody": "翻訳の誤り、追加してほしい単語、不具合などをご連絡ください。\n\nGoogle フォーム：[未設定]",
+
+    "modalResetTitle": "本当にリセットしますか？",
+    "modalResetBody": "すべての学習進捗（覚えた単語、出題履歴）が削除されます。この操作は取り消せません。",
+    "modalResetConfirm": "リセットする",
+
+    "modalCancel": "キャンセル",
+    "modalClose": "閉じる",
+    "modalOk": "OK"
+  },
+  "languages": {
+    "en": { "displayName": "English", "subName": "English" },
+    "zh": { "displayName": "中文", "subName": "Chinese" },
+    "my": { "displayName": "မြန်မာ", "subName": "Myanmar" },
+    "mn": { "displayName": "Монгол", "subName": "Mongolian" },
+    "id": { "displayName": "Bahasa Indonesia", "subName": "Indonesian" },
+    "ne": { "displayName": "नेपाली", "subName": "Nepali" }
+  },
+  "labels": {
+    "en": { "definition": "Definition", "example": "Example" },
+    "zh": { "definition": "释义", "example": "例句" },
+    "my": { "definition": "အဓိပ္ပါယ်", "example": "နမူနာ" },
+    "mn": { "definition": "Утга", "example": "Жишээ" },
+    "id": { "definition": "Arti", "example": "Contoh" },
+    "ne": { "definition": "अर्थ", "example": "उदाहरण" }
+  }
+}

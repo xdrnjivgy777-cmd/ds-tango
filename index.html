@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DS単語">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>DS単語</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SVG icon symbols, reused via <use href="#id"> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-speaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+  </symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12l5 5 9-11"/>
+  </symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M4 6h16M4 12h16M4 18h10"/>
+  </symbol>
+  <symbol id="ic-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <symbol id="ic-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 18l-6-6 6-6"/>
+  </symbol>
+  <symbol id="ic-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 6l6 6-6 6"/>
+  </symbol>
+</svg>
+
+<div id="app" class="app">
+
+  <!-- ========== Welcome view (first-open only) ========== -->
+  <section id="view-welcome" class="view" hidden>
+    <div class="welcome">
+      <h1 class="brand">DS単語</h1>
+      <p class="sub">データサイエンス・AI科<br>単語特訓</p>
+      <button class="btn-action primary" data-action="welcome-start">はじめる</button>
+    </div>
+  </section>
+
+  <!-- ========== Language select view ========== -->
+  <section id="view-lang-select" class="view" hidden>
+    <div class="lang-select">
+      <h2>翻訳言語を選んでください</h2>
+      <p>カードの下に表示される訳語です。</p>
+      <div class="lang-list" id="lang-list">
+        <!-- filled by JS -->
+      </div>
+      <div class="lang-select-footer">
+        <button class="btn-action primary" data-action="lang-confirm" id="lang-confirm-btn">確認</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Onboarding (3-screen tour) ========== -->
+  <section id="view-onboarding" class="view" hidden>
+    <div class="onboarding">
+      <div class="onb-slides" id="onb-slides">
+        <div class="onb-slide" data-step="1">
+          <div class="onb-illust">
+            <svg viewBox="0 0 200 200" width="160" height="160" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="36" y="50" width="128" height="100" rx="12"/>
+              <text x="100" y="108" text-anchor="middle" fill="currentColor" stroke="none" font-size="34" font-family="serif" font-weight="600">単語</text>
+              <path d="M70 168 L130 168" stroke-dasharray="4 4"/>
+            </svg>
+          </div>
+          <h3>カードで単語を覚える</h3>
+          <p>1日数語、すきま時間にどうぞ。</p>
+        </div>
+        <div class="onb-slide" data-step="2" hidden>
+          <div class="onb-illust">
+            <svg viewBox="0 0 200 200" width="160" height="160" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="100" cy="100" r="70"/>
+              <path d="M55 100 Q100 60 145 100 Q100 140 55 100" stroke-dasharray="3 5"/>
+              <circle cx="155" cy="55" r="8" fill="currentColor"/>
+              <path d="M155 55 m-3 0 l2 3 l5 -6" stroke="white" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3>「覚えた」を押すまで<br>くり返し出ます</h3>
+          <p>覚えていない単語は自動でまた出てきます。</p>
+        </div>
+        <div class="onb-slide" data-step="3" hidden>
+          <div class="onb-illust">
+            <svg viewBox="0 0 200 200" width="160" height="160" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="60" y="40" width="80" height="130" rx="14"/>
+              <circle cx="100" cy="155" r="5"/>
+              <path d="M85 85 L100 105 L120 75" stroke-width="3"/>
+            </svg>
+          </div>
+          <h3>進捗は端末に保存</h3>
+          <p>登録不要。ブラウザを閉じても残ります。</p>
+        </div>
+      </div>
+      <div class="onb-dots" id="onb-dots">
+        <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+      <div class="onb-footer">
+        <button class="btn-action primary" id="onb-next-btn" data-action="onb-next">次へ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Main study view ========== -->
+  <section id="view-card" class="view" hidden>
+    <header class="app-header">
+      <button class="app-icon-btn" aria-label="覚えた一覧" data-action="open-mastered">
+        <svg width="20" height="20"><use href="#ic-menu"/></svg>
+      </button>
+      <span class="app-title-text" id="card-counter">DS単語</span>
+      <button class="app-icon-btn" aria-label="設定" data-action="open-settings">
+        <svg width="20" height="20"><use href="#ic-gear"/></svg>
+      </button>
+    </header>
+    <div class="progress-bar"><span id="progress-fill"></span></div>
+    <div class="progress-meta">
+      <span id="progress-remaining">残り — 語</span>
+      <span id="progress-mastered">覚えた 0 / 0</span>
+    </div>
+
+    <div class="card-area" id="card-area">
+      <div class="card-content">
+        <div class="word-toolbar">
+          <button class="btn-mastered" data-action="mark-mastered" aria-label="覚えた">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ic-check"/></svg>
+            覚えた
+          </button>
+          <button class="btn-speaker" data-action="play-word" aria-label="単語を読み上げ">
+            <svg><use href="#ic-speaker"/></svg>
+          </button>
+        </div>
+        <div class="word-block" id="word-block">
+          <h1 class="word" id="card-word">—</h1>
+          <div class="reading-below" id="card-reading" hidden></div>
+        </div>
+
+        <!-- Expanded content (filled by JS, hidden by default) -->
+        <div class="info-wrap" id="info-wrap" hidden>
+          <!-- JP info -->
+          <div class="info-section">
+            <div class="info-row-label">
+              <span class="info-label">意味</span>
+              <button class="btn-speaker small" data-action="play-def" aria-label="意味を読み上げ"><svg><use href="#ic-speaker"/></svg></button>
+            </div>
+            <p class="info-text" id="card-jp-def">—</p>
+          </div>
+          <div class="info-section">
+            <div class="info-row-label">
+              <span class="info-label">例文</span>
+              <button class="btn-speaker small" data-action="play-ex" aria-label="例文を読み上げ"><svg><use href="#ic-speaker"/></svg></button>
+            </div>
+            <p class="info-text" id="card-jp-ex">—</p>
+          </div>
+          <!-- Translation block -->
+          <div id="tr-block">
+            <div class="info-section translated">
+              <div class="verify-badge-inline" id="tr-verify-badge" hidden>⚠ AI翻訳・校正待ち</div>
+              <div class="info-row-label">
+                <span class="info-label" id="tr-label-def">Definition</span>
+              </div>
+              <p class="info-text" id="card-tr-def">—</p>
+            </div>
+            <div class="info-section">
+              <div class="info-row-label">
+                <span class="info-label" id="tr-label-ex">Example</span>
+              </div>
+              <p class="info-text" id="card-tr-ex">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-action" id="card-bottom-btn" data-action="card-bottom">意味を見る</button>
+    </div>
+  </section>
+
+  <!-- ========== Mastered list view ========== -->
+  <section id="view-mastered" class="view" hidden>
+    <header class="app-header">
+      <button class="app-icon-btn" data-action="back-to-card" aria-label="戻る">
+        <svg width="20" height="20"><use href="#ic-chev-left"/></svg>
+      </button>
+      <span class="app-title-text">覚えた単語</span>
+      <span style="width:36px;"></span>
+    </header>
+    <div class="mastered">
+      <div class="mastered-header">
+        <h2>覚えた単語</h2>
+        <span class="count" id="mastered-count">0 / 0</span>
+      </div>
+      <div class="mastered-list" id="mastered-list">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Settings view ========== -->
+  <section id="view-settings" class="view" hidden>
+    <header class="app-header">
+      <button class="app-icon-btn" data-action="back-to-card" aria-label="戻る">
+        <svg width="20" height="20"><use href="#ic-chev-left"/></svg>
+      </button>
+      <span class="app-title-text">設定</span>
+      <span style="width:36px;"></span>
+    </header>
+    <div class="settings">
+      <div class="setting-group">
+        <div class="setting-group-label">表示</div>
+        <div class="setting-item" data-action="change-lang">
+          <span>翻訳言語</span>
+          <span><span class="value" id="setting-lang-value">English</span> <span class="chev">›</span></span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-label">進捗</div>
+        <div class="setting-item" data-action="open-mastered">
+          <span>覚えた単語</span>
+          <span><span class="value" id="setting-mastered-value">0 / 0</span> <span class="chev">›</span></span>
+        </div>
+        <div class="setting-item" data-action="export-progress">
+          <span>進捗をエクスポート</span>
+          <span class="chev">›</span>
+        </div>
+        <div class="setting-item" data-action="import-progress">
+          <span>進捗をインポート</span>
+          <span class="chev">›</span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-label">その他</div>
+        <div class="setting-item" data-action="feedback">
+          <span>フィードバック</span>
+          <span class="chev">›</span>
+        </div>
+        <div class="setting-item" data-action="about">
+          <span>このアプリについて</span>
+          <span class="chev">›</span>
+        </div>
+        <div class="setting-item danger" data-action="reset-all">
+          <span>すべてリセット</span>
+        </div>
+      </div>
+      <div class="settings-meta" id="settings-meta">
+        DS単語 v0.1<br>
+        データ更新日：—
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Done celebration ========== -->
+  <section id="view-done" class="view" hidden>
+    <div class="done">
+      <div class="big-emoji">🎉</div>
+      <h1>全部覚えました！</h1>
+      <p>すべての単語をマスターしました。<br>覚えた一覧から復習もできます。</p>
+      <button class="btn-action primary" data-action="open-mastered">覚えた一覧へ</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ========== Modal (export/import/about) ========== -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h3 id="modal-title">—</h3>
+      <button class="app-icon-btn" data-action="close-modal" aria-label="閉じる">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">—</div>
+    <div class="modal-footer" id="modal-footer">
+      <button class="btn-action" data-action="close-modal">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Toast (transient messages) ========== -->
+<div id="toast" class="toast" hidden></div>
+
+<!-- ========== Audio element (single instance, reused) ========== -->
+<audio id="audio" preload="none"></audio>
+
+<script src="app.js"></script>
+</body>
+</html>
