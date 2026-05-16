@@ -8,7 +8,7 @@
   const STORAGE_VERSION = 1;
   const DATA_URL = 'data/vocabulary.json';
   const I18N_URL = 'i18n/ja.json';
-  const FEEDBACK_URL = ''; // TODO: paste your Google Form URL here when ready
+  const FEEDBACK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScqBdFkXTi_LqZetul-YqXUJgmoBLerdgwBjpy8QakKBUwvPQ/viewform';
 
   const TRANSLATION_LANGS = ['en', 'zh', 'my', 'mn', 'id', 'ne'];
   const DEFAULT_LANG = 'en';
@@ -106,57 +106,45 @@
     return { total, mastered, learning, remaining: total - mastered };
   }
 
-  // ============ Queue logic (PRD §3.2) ============
-  // Target size of the "learning" queue before we start recycling old words.
-  // Until the queue has this many words, "次へ" prefers fresh words; afterwards
-  // it cycles oldest-first through the learning queue.
-  const LEARNING_QUEUE_TARGET = 7;
+  // ============ Queue logic ============
+  // How many recently-shown words to remember and avoid re-picking. Prevents
+  // immediate repeats and short cycles, forcing the learner to actually
+  // memorize the word rather than its position in a fixed loop. Not persisted
+  // across reloads — that's fine.
+  const RECENT_HISTORY_SIZE = 20;
+  const recentlyShown = []; // queue of word IDs, most-recent at the end
 
   /**
-   * Pick the next word to show.
-   * Strategy:
-   *   1. Never return the current word if any alternative exists.
-   *   2. While the learning queue is small (< LEARNING_QUEUE_TARGET), grow it with fresh words.
-   *   3. Once large enough, cycle through learning words oldest-first.
-   *   4. If only the current word remains unmastered, return it (user must decide).
-   *   5. If everything is mastered, return null → done page.
+   * Pick the next word fully at random from every word the user hasn't
+   * yet marked "覚えた". Excludes the current word and (when possible)
+   * the last RECENT_HISTORY_SIZE words shown, so the same word doesn't
+   * loop back in immediately.
+   * If all words are mastered, return null (→ done page).
    */
   function pickNextWord() {
     const currentId = currentWord ? currentWord.id : null;
-    const learning = [];
-    const fresh = [];
-    for (const w of vocab.words) {
-      const s = statusOf(w.id);
-      if (s === 'mastered') continue;
-      if (s === 'learning') learning.push(w);
-      else fresh.push(w);
-    }
-
-    if (learning.length === 0 && fresh.length === 0) return null;
-
-    const learningOthers = currentId ? learning.filter((w) => w.id !== currentId) : learning;
-    const freshOthers = currentId ? fresh.filter((w) => w.id !== currentId) : fresh;
-
-    // If only the current word remains unmastered, return it
-    if (learningOthers.length === 0 && freshOthers.length === 0) {
-      return currentWord;
-    }
-
-    // Sort learning by last_seen ascending (oldest first)
-    learningOthers.sort((a, b) => {
-      const la = state.last_seen[a.id] || '';
-      const lb = state.last_seen[b.id] || '';
-      return la < lb ? -1 : la > lb ? 1 : 0;
+    const candidates = vocab.words.filter((w) => {
+      if (statusOf(w.id) === 'mastered') return false;
+      if (w.id === currentId) return false;
+      return true;
     });
 
-    // Grow the learning queue with fresh words until it reaches the target
-    if (learning.length < LEARNING_QUEUE_TARGET && freshOthers.length > 0) {
-      return freshOthers[0];
+    if (candidates.length === 0) {
+      // Only the current word (if any) remains unmastered → user must decide
+      if (currentWord && statusOf(currentWord.id) !== 'mastered') return currentWord;
+      return null;
     }
 
-    // Queue is full enough — cycle oldest learning, fall back to fresh if none
-    if (learningOthers.length === 0) return freshOthers[0];
-    return learningOthers[0];
+    // Prefer candidates not in the recent-history queue; fall back to all if
+    // the unmastered pool is smaller than the history window.
+    const fresh = candidates.filter((w) => !recentlyShown.includes(w.id));
+    const pool = fresh.length > 0 ? fresh : candidates;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function pushRecent(id) {
+    recentlyShown.push(id);
+    while (recentlyShown.length > RECENT_HISTORY_SIZE) recentlyShown.shift();
   }
 
   // ============ View routing ============
@@ -229,6 +217,7 @@
       setStatus(w.id, 'learning');
     }
     touchSeen(w.id);
+    pushRecent(w.id);
     updateProgressDisplay();
     showView('card');
   }
@@ -461,13 +450,15 @@
     openModal({ title: i18n.ui.modalAboutTitle, bodyHTML: body });
   }
   function openFeedbackModal() {
-    let body;
+    const body = `<p>${escapeHtml(i18n.ui.modalFeedbackBody).replace(/\n/g, '<br>')}</p>`;
+    let footer;
     if (FEEDBACK_URL) {
-      body = `<p>${escapeHtml(i18n.ui.modalFeedbackBody).replace(/\n.*$/m, '')}</p><p><a href="${FEEDBACK_URL}" target="_blank" rel="noopener">${FEEDBACK_URL}</a></p>`;
-    } else {
-      body = `<p>${escapeHtml(i18n.ui.modalFeedbackBody).replace(/\n/g, '<br>')}</p>`;
+      footer = `
+        <button class="btn-action" data-action="close-modal">${i18n.ui.modalClose}</button>
+        <button class="btn-action primary" onclick="window.open('${FEEDBACK_URL}', '_blank', 'noopener')">フォームを開く</button>
+      `;
     }
-    openModal({ title: i18n.ui.modalFeedbackTitle, bodyHTML: body });
+    openModal({ title: i18n.ui.modalFeedbackTitle, bodyHTML: body, footerHTML: footer });
   }
   function openResetModal() {
     const body = `<p>${escapeHtml(i18n.ui.modalResetBody)}</p>`;
